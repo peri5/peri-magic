@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>每日饮食选择</title>
+  <style>
+    /* 整体页面布局和背景设置 */
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-image: url('https://img.freepik.com/premium-photo/assorted-delicious-japanese-sushi-rolled-raw-fish-wooden-board_2829-4317.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    /* 标题样式 */
+    h1 {
+      color: #FF8C00;
+      font-size: 36px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      margin-bottom: 20px;
+    }
+
+    /* 提示文字样式 */
+    p {
+      color: #fff;
+      font-size: 20px;
+      margin-bottom: 30px;
+    }
+
+    /* 按钮样式 */
+    button {
+      padding: 18px 40px;
+      font-size: 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #FFD700;
+      color: #333;
+      cursor: pointer;
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #FFC107;
+    }
+
+    /* 饮食建议显示区域样式 */
+    #foodSuggestion {
+      margin-top: 40px;
+      font-size: 24px;
+      color: #fff;
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>每日饮食选择助手</h1>
+  <p>点击按钮获取今日饮食建议</p>
+  <button onclick="getFoodSuggestion()">获取建议</button>
+  <div id="foodSuggestion"></div>
+  <script>
+    function getFoodSuggestion() {
+      const foodOptions = [
+        "宫保鸡丁盖饭",
+        "番茄鸡蛋面",
+        "麻婆豆腐配米饭",
+        "虾仁炒饭",
+        "蔬菜沙拉",
+        "清蒸鱼",
+        "红烧肉套餐",
+        "回锅肉盖饭",
+        "寿司拼盘",
+        "牛肉拉面"
+      ];
+      const randomIndex = Math.floor(Math.random() * foodOptions.length);
+      const foodSuggestionElement = document.getElementById('foodSuggestion');
+      foodSuggestionElement.textContent = `今日建议饮食：${foodOptions[randomIndex]}`;
+    }
+  </script>
+</body>
+
+</html>
