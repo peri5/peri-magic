@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>每日饮食选择</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    button {
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+
+    #foodSuggestion {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>每日饮食选择助手</h1>
+  <p>点击按钮获取今日饮食建议</p>
+  <button onclick="getFoodSuggestion()">获取建议</button>
+  <div id="foodSuggestion"></div>
+  <script>
+    function getFoodSuggestion() {
+      const foodOptions = [
+        "宫保鸡丁盖饭",
+        "番茄鸡蛋面",
+        "麻婆豆腐配米饭",
+        "虾仁炒饭",
+        "蔬菜沙拉",
+        "清蒸鱼",
+        "红烧肉套餐",
+        "回锅肉盖饭",
+        "寿司拼盘",
+        "牛肉拉面"
+      ];
+      const randomIndex = Math.floor(Math.random() * foodOptions.length);
+      const foodSuggestionElement = document.getElementById('foodSuggestion');
+      foodSuggestionElement.textContent = `今日建议饮食：${foodOptions[randomIndex]}`;
+    }
+  </script>
+</body>
+
+</html>
