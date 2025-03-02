@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>每日饮食选择</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      color: #FF8C00;
+      font-size: 36px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      margin-bottom: 20px;
+    }
+
+    p {
+      color: #fff;
+      font-size: 20px;
+      margin-bottom: 30px;
+    }
+
+    button {
+      padding: 18px 40px;
+      font-size: 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #FFD700;
+      color: #333;
+      cursor: pointer;
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #FFC107;
+    }
+
+    #foodSuggestion {
+      margin-top: 40px;
+      font-size: 24px;
+      color: #fff;
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>每日饮食选择助手</h1>
+  <p>点击按钮获取今日饮食建议</p>
+  <button onclick="getFoodSuggestion()">获取建议</button>
+  <div id="foodSuggestion"></div>
+  <script>
+    function getFoodSuggestion() {
+      const foodOptions = [
+        "宫保鸡丁盖饭",
+        "番茄鸡蛋面",
+        "麻婆豆腐配米饭",
+        "虾仁炒饭",
+        "蔬菜沙拉",
+        "清蒸鱼",
+        "红烧肉套餐",
+        "回锅肉盖饭",
+        "寿司拼盘",
+        "牛肉拉面"
+      ];
+      const backgroundOptions = [
+        "https://pic1.zhimg.com/v2-8c8d8d8d8d8d8d8d8d8d8d8d8d8d8d8_r.jpg", // 宫保鸡丁盖饭背景图示例
+        "https://pic2.zhimg.com/v2-7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7_r.jpg", // 番茄鸡蛋面背景图示例
+        "https://pic3.zhimg.com/v2-9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9_r.jpg", // 麻婆豆腐配米饭背景图示例
+        "https://pic4.zhimg.com/v2-6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6_r.jpg", // 虾仁炒饭背景图示例
+        "https://pic5.zhimg.com/v2-5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5_r.jpg", // 蔬菜沙拉背景图示例
+        "https://pic6.zhimg.com/v2-4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4_r.jpg", // 清蒸鱼背景图示例
+        "https://pic7.zhimg.com/v2-3c3c3c3c3c3c3c3c3c3
