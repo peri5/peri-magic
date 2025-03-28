@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotating CD Cover</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+
+       .cd {
+            width: 200px;
+            height: 200px;
+            background-image: url('https://pic.rmb.bdstatic.com/bjh/3f132e44ec2/240718/5fb517717cd256529f58de6fc50ef023.jpeg@h_1280&text=CD+Cover');
+            background-size: cover;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            animation: rotate 5s linear infinite;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+       .cd-text {
+            position: absolute;
+            font-size: 18px;
+            z-index: 1;
+            animation: changeColor 5s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes changeColor {
+            0% {
+                color: #a6c1ee;
+            }
+            20% {
+                color: #fbc2eb;
+            }
+            40% {
+                color: #ffd6e4;
+            }
+            60% {
+                color: #b9fbc0;
+            }
+            80% {
+                color: #fdfd96;
+            }
+            100% {
+                color: #a6c1ee;
+            }
+        }
+
+       .cd.paused {
+            animation-play-state: paused;
+        }
+
+       .control-button {
+            width: 30px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            position: absolute;
+            z-index: 2;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cd">
+        <span class="cd-text">handsome zlh</span>
+        <div class="control-button" id="toggleButton"></div>
+    </div>
+    <script>
+        const cd = document.querySelector('.cd');
+        const toggleButton = document.getElementById('toggleButton');
+        let isPaused = false;
+
+        toggleButton.addEventListener('click', function () {
+            if (isPaused) {
+                cd.classList.remove('paused');
+            } else {
+                cd.classList.add('paused');
+            }
+            isPaused = !isPaused;
+        });
+    </script>
+</body>
+
+</html>
+    
