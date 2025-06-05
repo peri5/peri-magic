@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生成高频词图和词云图</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input[type="file"] {
+            display: block;
+        }
+        .form-group button {
+            display: block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        .result img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>生成高频词图和词云图</h1>
+        <form id="uploadForm">
+            <div class="form-group">
+                <label for="file1">上传词频统计结果文件（CSV格式）：</label>
+                <input type="file" id="file1" name="file1" accept=".csv" required>
+            </div>
+            <div class="form-group">
+                <button type="submit">生成图表</button>
+            </div>
+        </form>
+        <div class="result" id="result">
+            <h2>生成结果：</h2>
+            <div id="chart1"></div>
+            <div id="chart2"></div>
+        </div>
+    </div>
+
+    <!-- 引入Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 引入WordCloud2.js -->
+    <script src="https://cdn.jsdelivr.net/npm/wordcloud2.js@2.1.0/wordcloud2.min.js"></script>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const file1 = document.getElementById('file1').files[0];
+
+            // 读取CSV文件
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const datas = parseCSV(e.target.result);
+                generateBarChart(datas);
+                generateWordCloud(datas);
+            };
+            reader.readAsText(file1);
+        });
+
+        function parseCSV(csvString) {
+            const rows = csvString.trim().split('\n');
+            const data = rows.map(row => {
+                const [word, count] = row.split(',');
+                return { word: word.trim(), count: parseInt(count.trim()) };
+            });
+            return data;
+        }
+
+        function generateBarChart(data) {
+            const chartDiv = document.getElementById('chart1');
+            chartDiv.innerHTML = '<canvas id="barChart"></canvas>';
+
+            const ctx = document.getElementById('barChart').getContext('2d');
+            const labels = data.map(d => d.word);
+            const counts = data.map(d => d.count);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '高频词统计',
+                        data: counts,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateWordCloud(data) {
+            const chartDiv = document.getElementById('chart2');
+            chartDiv.innerHTML = '<canvas id="wordCloud"></canvas>';
+
+            const wordCounts = data.reduce((acc, d) => {
+                acc[d.word] = d.count;
+                return acc;
+            }, {});
+
+            const wordCloud = new WordCloud(document.getElementById('wordCloud'), {
+                list: Object.entries(wordCounts),
+                gridSize: 16,
+                weightFactor: 10,
+                drawBoundingBox: true,
+                wait: 0,
+                clearCanvas: true
+            });
+        }
+    </script>
+</body>
+</html>
