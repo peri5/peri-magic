@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生成高频词图和词云图</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input[type="file"] {
+            display: block;
+        }
+        .form-group button {
+            display: block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        .result img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>生成高频词图和词云图</h1>
+        <form id="uploadForm">
+            <div class="form-group">
+                <label for="file1">上传词频统计结果文件（CSV格式）：</label>
+                <input type="file" id="file1" name="file1" accept=".csv" required>
+            </div>
+            <div class="form-group">
+                <label for="file2">上传词频统计结果（all）文件（CSV格式）：</label>
+                <input type="file" id="file2" name="file2" accept=".csv" required>
+            </div>
+            <div class="form-group">
+                <label for="file3">上传背景图片（可选）：</label>
+                <input type="file" id="file3" name="file3" accept="image/*">
+            </div>
+            <div class="form-group">
+                <button type="submit">生成图表</button>
+            </div>
+        </form>
+        <div class="result" id="result">
+            <h2>生成结果：</h2>
+            <div id="chart1"></div>
+            <div id="chart2"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const file1 = document.getElementById('file1').files[0];
+            const file2 = document.getElementById('file2').files[0];
+            const file3 = document.getElementById('file3').files[0];
+
+            const formData = new FormData();
+            formData.append('file1', file1);
+            formData.append('file2', file2);
+            if (file3) {
+                formData.append('file3', file3);
+            }
+
+            fetch('https://your-heroku-app.herokuapp.com/generate_charts', { // 替换为你的Heroku应用URL
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                    <h2>生成结果：</h2>
+                    <div>
+                        <h3>高频词统计图</h3>
+                        <img src="data:image/png;base64,${data.chart1}" alt="高频词统计图">
+                    </div>
+                    <div>
+                        <h3>词云图</h3>
+                        <img src="data:image/png;base64,${data.chart2}" alt="词云图">
+                    </div>
+                `;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('生成图表时出错，请检查文件格式和内容。');
+            });
+        });
+    </script>
+</body>
+</html>
