@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>弹幕显示</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        .danmaku {
+            position: absolute;
+            top: 0;
+            left: 100%;
+            white-space: nowrap;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="danmaku-container"></div>
+
+    <script>
+        // 从JSON文件中加载弹幕数据
+        async function loadDanmakus() {
+            const response = await fetch('danmakus.json');
+            const data = await response.json();
+            return data;
+        }
+
+        // 创建弹幕
+        function createDanmaku(content, color) {
+            const div = document.createElement('div');
+            div.classList.add('danmaku');
+            div.style.color = color;
+            div.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            div.textContent = content;
+            return div;
+        }
+
+        // 显示弹幕
+        async function showDanmakus() {
+            const container = document.getElementById('danmaku-container');
+            const danmakus = await loadDanmakus();
+
+            danmakus.forEach(danmaku => {
+                const elem = createDanmaku(danmaku.content, danmaku.color);
+                container.appendChild(elem);
+
+                // 设置弹幕的起始位置
+                const startY = Math.random() * (window.innerHeight - elem.offsetHeight);
+                elem.style.top = startY + 'px';
+
+                // 动画：从右向左移动
+                elem.animate([
+                    { transform: 'translateX(100%)' },
+                    { transform: 'translateX(-100%)' }
+                ], {
+                    duration: 10000, // 每条弹幕的移动时间（毫秒）
+                    iterations: 1,
+                    easing: 'linear'
+                }).onfinish = () => {
+                    container.removeChild(elem); // 动画结束后移除弹幕
+                };
+            });
+        }
+
+        // 初始化
+        showDanmakus();
+    </script>
+</body>
+</html>
