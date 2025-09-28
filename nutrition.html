@@ -1,0 +1,215 @@
+from flask import Flask, render_template, request, jsonify
+from openai import OpenAI
+import uuid
+import os
+import time
+import requests
+import json
+from PIL import Image
+from io import BytesIO
+
+app = Flask(__name__)
+# 为每个会话存储对话历史
+conversation_histories = {}
+# 图片缓存，避免重复生成相同图片
+image_cache = {}
+# 缓存过期时间（秒）
+CACHE_EXPIRY = 3600  # 1小时
+
+# ModelScope API配置
+base_url = 'https://api-inference.modelscope.cn/'
+api_key = "ms-5887e9b7-07b5-4690-8ef4-b641872e68dd"  # ModelScope Token
+common_headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json",
+}
+
+# 初始化OpenAI客户端
+client = OpenAI(
+    base_url='https://api-inference.modelscope.cn/v1',
+    api_key=api_key,
+)
+
+# 确保images文件夹存在
+def ensure_images_folder():
+    if not os.path.exists('static/images'):
+        os.makedirs('static/images')
+
+@app.route('/')
+def index():
+    # 生成会话ID并初始化对话历史
+    session_id = str(uuid.uuid4())
+    conversation_histories[session_id] = [
+            {
+                'role': 'system',
+                'content': '你是一名专业的营养师智能体，名字叫做慕姆。你的任务是根据用户的需求和身体状况，为用户提供个性化的食物选择建议和养生小知识。你需要保持友好、专业的语气，用通俗易懂的语言解释营养学知识，帮助用户养成健康的饮食习惯。'
+            }
+        ]
+    return render_template('index.html', session_id=session_id)
+
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    data = request.json
+    session_id = data.get('session_id')
+    user_message = data.get('message')
+    
+    # 确保会话ID存在，如果不存在则创建新的
+    if session_id not in conversation_histories:
+        conversation_histories[session_id] = [
+            {
+                'role': 'system',
+                'content': '你是一名专业的营养师智能体，名字叫做慕姆。你的任务是根据用户的需求和身体状况，为用户提供个性化的食物选择建议和养生小知识。你需要保持友好、专业的语气，用通俗易懂的语言解释营养学知识，帮助用户养成健康的饮食习惯。当用户请求菜品的制作方案时，请提供详细的制作步骤和食材清单。注意：在回复中不要包含任何图片标记或引用。'
+            }
+        ]
+    
+    # 添加用户消息到对话历史
+    conversation_histories[session_id].append({
+        'role': 'user',
+        'content': user_message
+    })
+    
+    try:
+        # 调用OpenAI API生成回复
+        response = client.chat.completions.create(
+            model='Qwen/Qwen3-Next-80B-A3B-Instruct',  # ModelScope Model-Id
+            messages=conversation_histories[session_id],
+            stream=False  # 不使用流式响应
+        )
+        
+        # 获取助手回复
+        assistant_response = response.choices[0].message.content
+        
+        # 将助手回复添加到对话历史
+        conversation_histories[session_id].append({
+            'role': 'assistant',
+            'content': assistant_response
+        })
+        
+        # 限制对话历史长度，避免上下文过长
+        if len(conversation_histories[session_id]) > 20:  # 保留系统消息+最近19条对话
+            conversation_histories[session_id] = [conversation_histories[session_id][0]] + conversation_histories[session_id][-19:]
+        
+        # 检查回复是否包含菜品制作方案相关内容
+        recipe_keywords = ['食材', '步骤', '制作', '烹饪', '做法', '材料', '菜谱', '食谱', '道菜', '烹饪法']
+        has_recipe = any(keyword in assistant_response for keyword in recipe_keywords)
+        
+        # 如果包含食谱，提取菜品名称或主要食材作为图像提示词
+        image_prompt = None
+        if has_recipe:
+            # 简单提取菜品名称或主要食材
+            # 实际应用中可以使用更复杂的NLP模型来提取
+            for keyword in recipe_keywords:
+                if keyword in assistant_response:
+                    # 提取关键词周围的文本作为图像提示
+                    keyword_index = assistant_response.find(keyword)
+                    start_index = max(0, keyword_index - 20)
+                    end_index = min(len(assistant_response), keyword_index + 40)
+                    image_prompt = assistant_response[start_index:end_index].strip()
+                    break
+            
+            # 如果没有提取到，使用默认提示
+            if not image_prompt:
+                image_prompt = "美味健康的中国菜，高清照片，专业美食摄影"
+        
+        return jsonify({
+            'response': assistant_response,
+            'has_recipe': has_recipe,
+            'image_prompt': image_prompt
+        })
+    except Exception as e:
+        print(f"[ERROR] 发送消息时发生异常: {str(e)}")
+        import traceback
+        print(f"[ERROR] 异常堆栈: {traceback.format_exc()}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/generate_image', methods=['POST'])
+def generate_image():
+    data = request.json
+    recipe_description = data.get('recipe_description')
+    
+    if not recipe_description:
+        return jsonify({'error': '缺少食谱描述'}), 400
+    
+    try:
+        # 确保images文件夹存在
+        ensure_images_folder()
+        
+        print(f"[INFO] 接收到图像生成请求，描述: {recipe_description}")
+        
+        # 构建图像生成提示词
+        prompt = f"一张精美的食物照片，展示{recipe_description}，高清画质，专业美食摄影，色彩鲜艳，细节丰富，餐厅级别的摆盘"
+        
+        # 发送异步图像生成请求
+        response = requests.post(
+            f"{base_url}v1/images/generations",
+            headers={**common_headers, "X-ModelScope-Async-Mode": "true"},
+            data=json.dumps({
+                "model": "Qwen/Qwen-Image",  # ModelScope Model-Id
+                "prompt": prompt
+            }, ensure_ascii=False).encode('utf-8')
+        )
+        
+        response.raise_for_status()
+        task_id = response.json()["task_id"]
+        print(f"[INFO] 图像生成任务已创建，任务ID: {task_id}")
+        
+        # 轮询任务状态
+        max_wait_time = 60  # 最大等待时间（秒）
+        start_time = time.time()
+        
+        while time.time() - start_time < max_wait_time:
+            result = requests.get(
+                f"{base_url}v1/tasks/{task_id}",
+                headers={**common_headers, "X-ModelScope-Task-Type": "image_generation"},
+            )
+            result.raise_for_status()
+            task_data = result.json()
+            
+            if task_data["task_status"] == "SUCCEED":
+                print("[INFO] 图像生成成功")
+                # 下载图像
+                image_url = task_data["output_images"][0]
+                image_response = requests.get(image_url)
+                image = Image.open(BytesIO(image_response.content))
+                
+                # 保存图像到static/images目录
+                image_filename = f"nutrition_{str(uuid.uuid4())[:8]}.jpg"
+                image_path = os.path.join('static', 'images', image_filename)
+                image.save(image_path)
+                
+                # 返回相对URL
+                relative_image_url = f"/static/images/{image_filename}"
+                return jsonify({
+                    'image_url': relative_image_url,
+                    'success': True
+                })
+            elif task_data["task_status"] == "FAILED":
+                print("[ERROR] 图像生成失败")
+                return jsonify({
+                    'error': '图像生成失败',
+                    'success': False
+                })
+            
+            # 等待5秒后再次检查
+            time.sleep(5)
+            
+        # 如果超时
+        print("[ERROR] 图像生成超时")
+        return jsonify({
+            'error': '图像生成超时',
+            'success': False
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] 发生异常: {str(e)}")
+        import traceback
+        print(f"[ERROR] 异常堆栈: {traceback.format_exc()}")
+        return jsonify({'error': str(e), 'success': False})
+
+if __name__ == '__main__':
+    # 确保templates目录存在
+    if not os.path.exists('templates'):
+        os.makedirs('templates')
+    print("Starting Nutritionist Assistant with Image Generation...")
+    print("Visit http://127.0.0.1:3028 to use the application")
+    app.run(debug=True, host='0.0.0.0', port=3028)
